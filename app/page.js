@@ -96,12 +96,7 @@ export default function Home() {
                       }`}
                     >
                       <div className="relative h-64 bg-gray-300">
-                        <img
-                          src={cover}
-                          alt={title}
-                          fill
-                          className="object-cover"
-                        />
+                        <img src={cover} alt={title} className="object-cover" />
                       </div>
                       <div className="p-4">
                         <h3 className="font-bold text-lg mb-2 group-hover:text-[#d65d0e] transition">

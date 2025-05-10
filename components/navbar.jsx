@@ -23,6 +23,7 @@ const Navbar = () => {
     try {
       const results = await searchManga(searchQuery);
       setSearchResults(results);
+      setIsSearchFocused(true);
       console.log("Search results:", results);
     } catch (error) {
       console.error("Error searching manga:", error);
@@ -106,7 +107,7 @@ const Navbar = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
                     setIsSearchFocused(false);
@@ -114,8 +115,8 @@ const Navbar = () => {
                     setSearchQuery("");
                   }
                 }}
-                placeholder="  Search for manga titles..."
-                className={`flex-1 p-2 rounded-l-full h-12 border ${
+                placeholder="Search for manga titles..."
+                className={`flex-1 px-7 py-2 rounded-l-full h-12 border ${
                   theme === "dark"
                     ? "bg-[#3c3836] border-[#504945] text-[#ebdbb2]"
                     : "bg-white border-gray-300 text-[#3c3836]"
@@ -179,6 +180,7 @@ const Navbar = () => {
             {/* Search Results Dropdown */}
             {isSearchFocused && searchResults.length > 0 && (
               <div
+                onMouseDown={(e) => e.preventDefault()}
                 className={`absolute top-full left-0 right-0 mt-2 p-2 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto ${
                   theme === "dark"
                     ? "bg-[#3c3836] text-[#ebdbb2]"
@@ -286,7 +288,9 @@ const Navbar = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
+                  onBlur={() =>
+                    setTimeout(() => setIsSearchFocused(false), 200)
+                  }
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setIsSearchFocused(false);
@@ -295,7 +299,7 @@ const Navbar = () => {
                     }
                   }}
                   placeholder="Search for manga titles..."
-                  className={`flex-1 min-w-0 p-2 h-12 rounded-l-full border ${
+                  className={`flex-1 min-w-0 px-7 py-2 h-12 rounded-l-full border ${
                     theme === "dark"
                       ? "bg-[#3c3836] border-[#504945] text-[#ebdbb2]"
                       : "bg-white border-gray-300 text-[#3c3836]"
@@ -365,6 +369,7 @@ const Navbar = () => {
           </div>
           {isSearchFocused && searchResults.length > 0 && (
             <div
+              onMouseDown={(e) => e.preventDefault()}
               className={`mt-4 p-2 rounded-md shadow-lg max-h-[50vh] overflow-y-auto ${
                 theme === "dark" ? "bg-[#3c3836]" : "bg-white"
               }`}

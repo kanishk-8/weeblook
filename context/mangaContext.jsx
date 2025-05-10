@@ -62,7 +62,7 @@ export const MangaProvider = ({ children }) => {
 
     try {
       const response = await fetch(
-        `https://api.mangadex.org/manga?title=${encodeURIComponent(
+        `/api/mangadex?path=manga&title=${encodeURIComponent(
           query
         )}&limit=10&includes[]=cover_art`
       );
@@ -99,7 +99,7 @@ export const MangaProvider = ({ children }) => {
 
     try {
       const response = await fetch(
-        `https://api.mangadex.org/manga?limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive`
+        `/api/mangadex?path=manga&limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive`
       );
       const data = await response.json();
 
@@ -134,7 +134,7 @@ export const MangaProvider = ({ children }) => {
 
     try {
       const response = await fetch(
-        `https://api.mangadex.org/manga?limit=${limit}&offset=${offset}&includedTags[]=${genreId}&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive`
+        `/api/mangadex?path=manga&limit=${limit}&offset=${offset}&includedTags[]=${genreId}&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive`
       );
       const data = await response.json();
 
@@ -168,7 +168,7 @@ export const MangaProvider = ({ children }) => {
 
     try {
       const response = await fetch(
-        `https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=cover_art`
+        `/api/mangadex?path=manga/${mangaId}&includes[]=author&includes[]=artist&includes[]=cover_art`
       );
       const data = await response.json();
 
@@ -204,7 +204,7 @@ export const MangaProvider = ({ children }) => {
           // throttle requests to avoid rate limiting
           await new Promise((res) => setTimeout(res, 300));
           const res = await fetch(
-            `https://api.mangadex.org/manga/${mangaId}/feed?limit=${limit}&offset=${offset}&translatedLanguage[]=${translatedLanguage}&order[chapter]=asc`
+            `/api/mangadex?path=manga/${mangaId}/feed&limit=${limit}&offset=${offset}&translatedLanguage[]=${translatedLanguage}&order[chapter]=asc`
           );
           const json = await res.json();
           pageData = json.data || [];
@@ -237,7 +237,7 @@ export const MangaProvider = ({ children }) => {
 
     try {
       const response = await fetch(
-        `https://api.mangadex.org/at-home/server/${chapterId}`
+        `/api/mangadex?path=at-home/server/${chapterId}`
       );
       const data = await response.json();
       setLoading(false);
