@@ -49,7 +49,7 @@ export default function Home() {
           onSubmit={handleSearch}
           className="max-w-2xl w-full mx-auto mb-12"
         >
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={searchQuery}
@@ -64,7 +64,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={isSearching}
-              className={`px-6 py-3 rounded-lg bg-[#d65d0e] text-white font-medium hover:bg-red-600 disabled:opacity-70 transition`}
+              className="w-full sm:w-auto px-6 py-3 rounded-lg bg-[#d65d0e] text-white font-medium hover:bg-red-600 disabled:opacity-70 transition"
             >
               {isSearching ? "Searching..." : "Search"}
             </button>

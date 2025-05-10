@@ -23,6 +23,8 @@ const PopularManga = () => {
     { id: "ace04997-f6bd-436e-b261-779182193d3d", name: "Drama" },
     { id: "5920b825-4181-4a17-beeb-9918b0ff7a30", name: "Comedy" },
     { id: "e5301a23-ebd9-49dd-a0cb-2add944c7fe9", name: "Adventure" },
+    { id: "ec0f6779-2f59-4e12-b76f-e1c2e8d5ce0b", name: "Ecchi" },
+    { id: "27d255d1-1fba-42f3-bdf8-221ef388dd24", name: "Adult" },
   ];
 
   // Fetch manga data based on active genre
