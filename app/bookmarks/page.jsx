@@ -3,38 +3,27 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/context/themeContext";
 import Link from "next/link";
-import Image from "next/image";
+import { useManga } from "@/context/mangaContext";
+import Loading from "@/components/loading";
 
 const BookmarksPage = () => {
   const { theme } = useTheme();
-  const [bookmarks, setBookmarks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { bookmarks, removeBookmark } = useManga();
   const [sortMethod, setSortMethod] = useState("recent"); // recent, title
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Only run on client side
-    if (typeof window !== "undefined") {
-      setIsLoading(true);
-
-      const savedBookmarks = JSON.parse(
-        localStorage.getItem("bookmarks") || "[]"
-      );
-
-      setBookmarks(savedBookmarks);
-      setIsLoading(false);
-    }
+    // Set loading to false after component mounts since bookmarks are already loaded in context
+    setIsLoading(false);
   }, []);
 
   const handleRemoveBookmark = (id) => {
-    const updatedBookmarks = bookmarks.filter((bookmark) => bookmark.id !== id);
-    setBookmarks(updatedBookmarks);
-    localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
+    removeBookmark(id);
   };
 
   const handleClearAllBookmarks = () => {
     if (confirm("Are you sure you want to remove all bookmarks?")) {
-      setBookmarks([]);
-      localStorage.setItem("bookmarks", JSON.stringify([]));
+      bookmarks.forEach((bookmark) => removeBookmark(bookmark.id));
     }
   };
 
@@ -56,8 +45,8 @@ const BookmarksPage = () => {
           : "bg-gray-100 text-zinc-800"
       }`}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-6">
+      <div className="w-full max-w-7xl mx-auto px-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold">My Bookmarks</h1>
 
           <div className="flex items-center gap-4">
@@ -83,7 +72,7 @@ const BookmarksPage = () => {
             {bookmarks.length > 0 && (
               <button
                 onClick={handleClearAllBookmarks}
-                className="px-4 py-2 text-sm rounded bg-red-500 text-white hover:bg-red-600 transition"
+                className="px-4 py-2 text-sm rounded bg-[#d65d0e] text-white hover:bg-[#d65e0eaf] transition"
               >
                 Clear All
               </button>
@@ -93,7 +82,7 @@ const BookmarksPage = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#d65d0e]"></div>
+            <Loading />
           </div>
         ) : (
           <>
@@ -127,7 +116,7 @@ const BookmarksPage = () => {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {sortedBookmarks.map((bookmark) => (
                   <div
                     key={bookmark.id}

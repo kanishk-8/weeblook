@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
       <ThemeProvider>
         <MangaProvider>
           <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
           >
             <Navbar />
             {children}

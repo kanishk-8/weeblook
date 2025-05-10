@@ -1,267 +1,329 @@
 "use client";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const MangaContext = createContext();
 
-// Helper function for making API calls with retry logic
-const fetchWithRetry = async (url, options = {}, retries = 3, delay = 1000) => {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      next: { revalidate: 0 },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API Error (${response.status}): ${url} - ${errorText}`);
-      throw new Error(`API responded with status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    if (retries > 0) {
-      console.log(`Retrying fetch for ${url}. Retries left: ${retries}`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      return fetchWithRetry(url, options, retries - 1, delay * 1.5);
-    }
-    throw error;
-  }
-};
-
 export const MangaProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [bookmarks, setBookmarks] = useState([]);
 
-  const getPopularManga = async (limit = 24, offset = 0) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        limit: limit,
-        offset: offset,
-        "includes[]": ["cover_art", "author", "artist"],
-        "order[followedCount]": "desc",
-        "contentRating[]": ["safe", "suggestive"],
-      });
+  // Cache for API responses
+  const [cache, setCache] = useState({
+    popular: {},
+    genres: {},
+    manga: {},
+    chapters: {},
+    pages: {},
+  });
 
-      const endpoint = `manga?${params.toString()}`;
-      const data = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(endpoint)}`
+  // Load bookmarks from localStorage on client-side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedBookmarks = JSON.parse(
+        localStorage.getItem("bookmarks") || "[]"
       );
-      return data.data || [];
-    } catch (error) {
-      console.error("Error fetching popular manga:", error);
-      setError("Failed to load popular manga");
-      return [];
-    } finally {
-      setLoading(false);
+      setBookmarks(savedBookmarks);
     }
-  };
+  }, []);
 
-  const getMangaById = async (mangaId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        "includes[]": ["author", "artist", "cover_art"],
-      });
-
-      const endpoint = `manga/${mangaId}?${params.toString()}`;
-      const data = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(endpoint)}`
-      );
-
-      if (!data || !data.data) {
-        throw new Error("Manga not found");
-      }
-
-      return data.data;
-    } catch (error) {
-      console.error("Error fetching manga details:", error);
-      setError("Failed to load manga details");
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getMangaChapters = async (mangaId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        "translatedLanguage[]": ["en"],
-        limit: 100,
-        "order[chapter]": "desc",
-        "includes[]": ["scanlation_group"],
-      });
-
-      const endpoint = `manga/${mangaId}/feed?${params.toString()}`;
-      const data = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(endpoint)}`
-      );
-
-      if (!data || !data.data) {
-        console.warn("No chapters found for manga:", mangaId);
-        return [];
-      }
-
-      return data.data || [];
-    } catch (error) {
-      console.error("Error fetching manga chapters:", error);
-      setError("Failed to load manga chapters");
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getMangaTags = async () => {
-    try {
-      const endpoint = "manga/tag";
-      const data = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(endpoint)}`
-      );
-      return data.data || [];
-    } catch (error) {
-      console.error("Error fetching manga tags:", error);
-      setError("Failed to load manga tags");
-      return [];
-    }
-  };
-
-  const getMangaByTags = async (tags, limit = 24, offset = 0) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-
-      // Add each tag as a separate includedTags[] parameter
-      tags.forEach((tag) => {
-        params.append("includedTags[]", tag);
-      });
-
-      params.append("limit", limit.toString());
-      params.append("offset", offset.toString());
-      params.append("includes[]", "cover_art");
-      params.append("includes[]", "author");
-      params.append("includes[]", "artist");
-      params.append("contentRating[]", "safe");
-      params.append("contentRating[]", "suggestive");
-
-      const endpoint = `manga?${params.toString()}`;
-      const data = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(endpoint)}`
-      );
-      return data.data || [];
-    } catch (error) {
-      console.error("Error fetching manga by tags:", error);
-      setError("Failed to load manga by tags");
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const searchManga = async (query) => {
-    try {
-      const params = new URLSearchParams({
-        title: query,
-        limit: "5",
-        "includes[]": "cover_art",
-        "contentRating[]": ["safe", "suggestive"],
-      });
-
-      const endpoint = `manga?${params.toString()}`;
-      const data = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(endpoint)}`
-      );
-      return data.data || [];
-    } catch (error) {
-      console.error("Error searching manga:", error);
-      setError("Failed to search manga");
-      return [];
-    }
-  };
-
-  const getChapterWithPages = async (mangaId, chapterId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // First, get the chapter information
-      const chapterEndpoint = `chapter/${chapterId}`;
-      const chapterData = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(chapterEndpoint)}`
-      );
-
-      if (!chapterData || !chapterData.data) {
-        throw new Error("Chapter not found");
-      }
-
-      // Then, get the chapter pages
-      const pagesEndpoint = `at-home/server/${chapterId}`;
-      const pagesData = await fetchWithRetry(
-        `/api/manga?endpoint=${encodeURIComponent(pagesEndpoint)}`
-      );
-
-      if (!pagesData || !pagesData.chapter) {
-        throw new Error("Chapter pages not found");
-      }
-
-      // Construct the full URLs for the pages
-      const baseUrl = pagesData.baseUrl;
-      const hash = pagesData.chapter.hash;
-      const pages = pagesData.chapter.data.map(
-        (page) => `${baseUrl}/data/${hash}/${page}`
-      );
-
-      return {
-        chapterData: chapterData.data,
-        pages: pages,
-      };
-    } catch (error) {
-      console.error("Error fetching chapter:", error);
-      setError("Failed to load chapter");
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Helper function to get cover image URL from manga object
   const getCoverImageUrl = (manga) => {
     try {
-      if (!manga || !manga.relationships) return null;
+      if (!manga.relationships) return "/placeholder.png";
 
       const coverArt = manga.relationships.find(
         (rel) => rel.type === "cover_art"
       );
+
       if (!coverArt || !coverArt.attributes || !coverArt.attributes.fileName) {
-        return null;
+        return "/placeholder.png";
       }
 
       return `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}`;
-    } catch (err) {
-      console.error("Error generating cover URL:", err);
+    } catch (error) {
+      console.error("Error getting cover image URL:", error);
+      return "/placeholder.png";
+    }
+  };
+
+  // Search for manga
+  const searchManga = async (query) => {
+    if (!query) return [];
+    setLoading(true);
+
+    // Create a cache key for this search query
+    const cacheKey = `search-${query.toLowerCase().trim()}`;
+
+    // Check if we have this search cached
+    if (cache.search && cache.search[cacheKey]) {
+      setLoading(false);
+      return cache.search[cacheKey];
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mangadex.org/manga?title=${encodeURIComponent(
+          query
+        )}&limit=10&includes[]=cover_art`
+      );
+      const data = await response.json();
+
+      // Cache the search results
+      setCache((prev) => ({
+        ...prev,
+        search: {
+          ...(prev.search || {}),
+          [cacheKey]: data.data || [],
+        },
+      }));
+
+      setLoading(false);
+      return data.data || [];
+    } catch (error) {
+      console.error("Error searching manga:", error);
+      setLoading(false);
+      return [];
+    }
+  };
+
+  // Fetch popular manga
+  const getPopularManga = async (limit = 20, offset = 0) => {
+    setLoading(true);
+
+    // Check cache first
+    const cacheKey = `popular-${limit}-${offset}`;
+    if (cache.popular[cacheKey]) {
+      setLoading(false);
+      return cache.popular[cacheKey];
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mangadex.org/manga?limit=${limit}&offset=${offset}&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive`
+      );
+      const data = await response.json();
+
+      // Store in cache
+      setCache((prev) => ({
+        ...prev,
+        popular: {
+          ...prev.popular,
+          [cacheKey]: data.data || [],
+        },
+      }));
+
+      setLoading(false);
+      return data.data || [];
+    } catch (error) {
+      console.error("Error fetching popular manga:", error);
+      setLoading(false);
+      return [];
+    }
+  };
+
+  // Fetch manga by genre/tag
+  const getMangaByGenre = async (genreId, limit = 20, offset = 0) => {
+    setLoading(true);
+
+    // Check cache first
+    const cacheKey = `genre-${genreId}-${limit}-${offset}`;
+    if (cache.genres[cacheKey]) {
+      setLoading(false);
+      return cache.genres[cacheKey];
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mangadex.org/manga?limit=${limit}&offset=${offset}&includedTags[]=${genreId}&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive`
+      );
+      const data = await response.json();
+
+      // Store in cache
+      setCache((prev) => ({
+        ...prev,
+        genres: {
+          ...prev.genres,
+          [cacheKey]: data.data || [],
+        },
+      }));
+
+      setLoading(false);
+      return data.data || [];
+    } catch (error) {
+      console.error("Error fetching manga by genre:", error);
+      setLoading(false);
+      return [];
+    }
+  };
+
+  // Fetch manga details
+  const getMangaDetails = async (mangaId) => {
+    setLoading(true);
+
+    // Check cache first
+    if (cache.manga[mangaId]) {
+      setLoading(false);
+      return cache.manga[mangaId];
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mangadex.org/manga/${mangaId}?includes[]=author&includes[]=artist&includes[]=cover_art`
+      );
+      const data = await response.json();
+
+      // Store in cache
+      setCache((prev) => ({
+        ...prev,
+        manga: {
+          ...prev.manga,
+          [mangaId]: data.data,
+        },
+      }));
+
+      setLoading(false);
+      return data.data;
+    } catch (error) {
+      console.error("Error fetching manga details:", error);
+      setLoading(false);
       return null;
     }
   };
 
-  const value = {
-    loading,
-    error,
-    getPopularManga,
-    getMangaById,
-    getMangaChapters,
-    getMangaTags,
-    getMangaByTags,
-    searchManga,
-    getChapterWithPages,
-    getCoverImageUrl,
+  // Fetch chapters for a manga
+  const getMangaChapters = async (mangaId, translatedLanguage = "en") => {
+    setLoading(true);
+    const allChapters = [];
+    const limit = 100;
+    let offset = 0;
+    try {
+      while (true) {
+        const cacheKey = `chapters-${mangaId}-${limit}-${offset}-${translatedLanguage}`;
+        let pageData = cache.chapters[cacheKey];
+        if (!pageData) {
+          // throttle requests to avoid rate limiting
+          await new Promise((res) => setTimeout(res, 300));
+          const res = await fetch(
+            `https://api.mangadex.org/manga/${mangaId}/feed?limit=${limit}&offset=${offset}&translatedLanguage[]=${translatedLanguage}&order[chapter]=asc`
+          );
+          const json = await res.json();
+          pageData = json.data || [];
+          setCache((prev) => ({
+            ...prev,
+            chapters: { ...prev.chapters, [cacheKey]: pageData },
+          }));
+        }
+        if (!pageData.length) break;
+        allChapters.push(...pageData);
+        offset += limit;
+      }
+    } catch (error) {
+      console.error("Error fetching manga chapters:", error);
+    }
+    setLoading(false);
+    return allChapters;
+  };
+
+  // Get chapter pages
+  const getChapterPages = async (chapterId) => {
+    setLoading(true);
+
+    // Check pages cache
+    const cacheKey = `pages-${chapterId}`;
+    if (cache.pages?.[cacheKey]) {
+      setLoading(false);
+      return cache.pages[cacheKey];
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mangadex.org/at-home/server/${chapterId}`
+      );
+      const data = await response.json();
+      setLoading(false);
+
+      if (data.result !== "ok") {
+        throw new Error("Failed to get chapter data");
+      }
+
+      const baseUrl = data.baseUrl;
+      const hash = data.chapter.hash;
+      const pages = data.chapter.data;
+
+      const chapterData = {
+        baseUrl,
+        hash,
+        pages,
+        fullUrls: pages.map((page) => `${baseUrl}/data/${hash}/${page}`),
+      };
+
+      // Store in cache
+      setCache((prev) => ({
+        ...prev,
+        pages: {
+          ...(prev.pages || {}),
+          [cacheKey]: chapterData,
+        },
+      }));
+
+      return chapterData;
+    } catch (error) {
+      console.error("Error fetching chapter pages:", error);
+      setLoading(false);
+      return null;
+    }
+  };
+
+  // Bookmark management
+  const addBookmark = (manga) => {
+    const newBookmark = {
+      id: manga.id,
+      title:
+        manga.attributes.title.en ||
+        manga.attributes.title.ja ||
+        Object.values(manga.attributes.title)[0],
+      coverUrl: getCoverImageUrl(manga),
+      addedAt: new Date().toISOString(),
+    };
+
+    const updatedBookmarks = [...bookmarks, newBookmark];
+    setBookmarks(updatedBookmarks);
+    localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
+    return updatedBookmarks;
+  };
+
+  const removeBookmark = (mangaId) => {
+    const updatedBookmarks = bookmarks.filter(
+      (bookmark) => bookmark.id !== mangaId
+    );
+    setBookmarks(updatedBookmarks);
+    localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
+    return updatedBookmarks;
+  };
+
+  const isBookmarked = (mangaId) => {
+    return bookmarks.some((bookmark) => bookmark.id === mangaId);
   };
 
   return (
-    <MangaContext.Provider value={value}>{children}</MangaContext.Provider>
+    <MangaContext.Provider
+      value={{
+        loading,
+        bookmarks,
+        searchManga,
+        getPopularManga,
+        getMangaByGenre,
+        getMangaDetails,
+        getMangaChapters,
+        getChapterPages,
+        getCoverImageUrl,
+        addBookmark,
+        removeBookmark,
+        isBookmarked,
+      }}
+    >
+      {children}
+    </MangaContext.Provider>
   );
 };
 
