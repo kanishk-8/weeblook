@@ -242,13 +242,13 @@ const MangaPage = () => {
                     href={`/manga/${id}/${
                       processedChapters[processedChapters.length - 1].id
                     }`}
-                    className="px-4 py-2 rounded bg-[#d65d0e] text-white hover:bg-[#fe8019] transition mr-4"
+                    className="px-2 md:px-4 text-sm md:text-lg py-2 rounded bg-[#d65d0e] text-white hover:bg-[#fe8019] transition mr-2 md:mr-4"
                   >
                     Read First Chapter
                   </Link>
                   <Link
                     href={`/manga/${id}/${processedChapters[0].id}`}
-                    className={`px-4 py-2 rounded transition ${
+                    className={`px-2 md:px-4 text-sm md:text-lg py-2 rounded transition ${
                       theme === "dark"
                         ? "bg-zinc-700 text-white hover:bg-zinc-600"
                         : "bg-gray-200 text-gray-700 hover:bg-gray-300"
