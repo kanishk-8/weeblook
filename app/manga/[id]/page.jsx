@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useManga } from "@/context/mangaContext";
 import { useTheme } from "@/context/themeContext";
 import Loading from "@/components/loading";
+import Image from "next/image";
 
 const MangaPage = () => {
   const { id } = useParams();
@@ -154,11 +155,15 @@ const MangaPage = () => {
           {/* Manga Header */}
           <div className="flex flex-col md:flex-row p-6">
             {/* Cover Image */}
-            <div className="w-48 h-72 md:w-64 md:h-96 flex-shrink-0 mx-auto md:mx-0 mb-6 md:mb-0">
-              <img
+            <div className="relative w-48 h-72 md:w-64 md:h-96 flex-shrink-0 mx-auto md:mx-0 mb-6 md:mb-0">
+              <Image
+                fill
+                sizes="(max-width: 768px) 192px, 256px"
+                quality={90}
+                priority={true}
                 src={coverUrl}
                 alt={`Cover for ${title}`}
-                className="w-full h-full object-cover rounded shadow-md"
+                className="object-cover rounded shadow-md"
               />
             </div>
 

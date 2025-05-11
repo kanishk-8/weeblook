@@ -14,6 +14,7 @@ export const MangaProvider = ({ children }) => {
     manga: {},
     chapters: {},
     pages: {},
+    tags: null,
   });
 
   // Load bookmarks from localStorage on client-side
@@ -24,6 +25,25 @@ export const MangaProvider = ({ children }) => {
       );
       setBookmarks(savedBookmarks);
     }
+
+    // Fetch tags/genres when component mounts
+    const fetchTags = async () => {
+      if (!cache.tags) {
+        try {
+          const response = await fetch("/api/mangadex?path=manga/tag");
+          const data = await response.json();
+          if (data.data) {
+            const tags = data.data.filter(
+              (tag) => tag.attributes.group === "genre"
+            );
+            setCache((prev) => ({ ...prev, tags }));
+          }
+        } catch (error) {
+          console.error("Error fetching tags:", error);
+        }
+      }
+    };
+    fetchTags();
   }, []);
 
   // Helper function to get cover image URL from manga object
@@ -277,6 +297,53 @@ export const MangaProvider = ({ children }) => {
     }
   };
 
+  // Get all available genres/tags including adult content
+  const getAllGenres = async () => {
+    if (cache.tags) return cache.tags;
+
+    try {
+      const response = await fetch("/api/mangadex?path=manga/tag");
+      const data = await response.json();
+      const allTags = data.data || [];
+      cache.tags = allTags;
+      return allTags;
+    } catch (error) {
+      console.error("Error fetching genres:", error);
+      return [];
+    }
+  };
+
+  // Search manga with multiple genres
+  const searchMangaWithGenres = async (
+    query = "",
+    selectedGenres = [],
+    limit = 20
+  ) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (query) params.append("title", query);
+      selectedGenres.forEach((genreId) =>
+        params.append("includedTags[]", genreId)
+      );
+      params.append("limit", limit);
+      params.append("includes[]", "cover_art");
+      params.append("contentRating[]", "safe");
+      params.append("contentRating[]", "suggestive");
+
+      const response = await fetch(
+        `/api/mangadex?path=manga&${params.toString()}`
+      );
+      const data = await response.json();
+      setLoading(false);
+      return data.data || [];
+    } catch (error) {
+      console.error("Error searching manga with genres:", error);
+      setLoading(false);
+      return [];
+    }
+  };
+
   // Bookmark management
   const addBookmark = (manga) => {
     const newBookmark = {
@@ -323,6 +390,8 @@ export const MangaProvider = ({ children }) => {
         addBookmark,
         removeBookmark,
         isBookmarked,
+        getAllGenres,
+        searchMangaWithGenres,
       }}
     >
       {children}

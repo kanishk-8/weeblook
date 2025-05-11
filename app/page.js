@@ -92,11 +92,19 @@ export default function Home() {
                   >
                     <div
                       className={`rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition ${
-                        theme === "dark" ? "bg-gray-800" : "bg-white"
+                        theme === "dark" ? "bg-zinc-800" : "bg-white"
                       }`}
                     >
                       <div className="relative h-64 bg-gray-300">
-                        <img src={cover} alt={title} className="object-cover" />
+                        <Image
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          quality={85}
+                          src={cover}
+                          alt={title}
+                          className="object-cover"
+                          loading="lazy"
+                        />
                       </div>
                       <div className="p-4">
                         <h3 className="font-bold text-lg mb-2 group-hover:text-[#d65d0e] transition">

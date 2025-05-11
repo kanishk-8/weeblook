@@ -17,9 +17,6 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "WeebLook",
   description: "website for weebs",
-  icons: {
-    icon: "/logo.ico",
-  },
 };
 
 export default function RootLayout({ children }) {

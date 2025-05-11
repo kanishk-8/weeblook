@@ -203,10 +203,13 @@ const Navbar = () => {
                       }}
                     >
                       <div className="w-12 h-16 relative mr-3 flex-shrink-0">
-                        <img
+                        <Image
+                          fill
+                          sizes="48px"
+                          quality={80}
                           src={coverUrl}
                           alt={manga.attributes.title.en || "Manga cover"}
-                          className="object-cover rounded w-full h-full"
+                          className="object-cover rounded"
                         />
                       </div>
                       <div>
@@ -389,11 +392,14 @@ const Navbar = () => {
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  <div className="w-12 h-16 mr-3 flex-shrink-0">
-                    <img
+                  <div className="w-12 h-16 relative mr-3 flex-shrink-0">
+                    <Image
+                      fill
+                      sizes="48px"
+                      quality={80}
                       src={getCoverImageUrl(manga)}
                       alt={manga.attributes.title.en || "Manga cover"}
-                      className="object-cover rounded w-full h-full"
+                      className="object-cover rounded"
                     />
                   </div>
                   <div>
@@ -415,12 +421,14 @@ const Navbar = () => {
             <Link
               href="/popularmanga"
               className="block font-medium px-4 py-2 rounded-lg bg-[#d65d0e] text-white hover:bg-[#fe8019] transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
             >
               Popular Manga
             </Link>
             <Link
               href="/bookmarks"
               className="block font-medium px-4 py-2 rounded-lg bg-[#d65d0e] text-white hover:bg-[#fe8019] transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
             >
               Bookmarks
             </Link>
