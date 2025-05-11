@@ -4,28 +4,10 @@ import NodeCache from "node-cache";
 const cache = new NodeCache({ stdTTL: 60, checkperiod: 120 }); // cache 60s
 
 async function fetchWithRetry(url, opts = {}, retries = 3, backoff = 1000) {
-  const headers = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    "User-Agent": "WeebLook/1.0.0 (your@email.com)",
-    Referer: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  };
-
   for (let i = 0; i < retries; i++) {
-    const res = await fetch(url, {
-      ...opts,
-      headers: { ...headers, ...opts.headers },
-    });
-
-    if (res.status === 429) {
-      await new Promise((r) => setTimeout(r, backoff * (i + 1)));
-      continue;
-    }
-
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    return res;
+    const res = await fetch(url, opts);
+    if (res.status !== 429) return res;
+    await new Promise((r) => setTimeout(r, backoff * (i + 1)));
   }
   throw new Error("Rate limit exceeded");
 }

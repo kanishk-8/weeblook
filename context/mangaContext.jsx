@@ -27,7 +27,7 @@ export const MangaProvider = ({ children }) => {
   }, []);
 
   // Helper function to get cover image URL from manga object
-  const getCoverImageUrl = (manga) => {
+  const getCoverImageUrl = (manga, quality = ".512") => {
     try {
       if (!manga.relationships) return "/placeholder.png";
 
@@ -39,7 +39,10 @@ export const MangaProvider = ({ children }) => {
         return "/placeholder.png";
       }
 
-      return `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.256.jpg`;
+      // Try with .jpg extension if quality is provided
+      const fileName =
+        coverArt.attributes.fileName + (quality ? quality + ".jpg" : "");
+      return `/api/cover-proxy?mangaId=${manga.id}&filename=${fileName}`;
     } catch (error) {
       console.error("Error getting cover image URL:", error);
       return "/placeholder.png";
