@@ -39,7 +39,7 @@ export const MangaProvider = ({ children }) => {
         return "/placeholder.png";
       }
 
-      return `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}`;
+      return `https://uploads.mangadex.org/covers/${manga.id}/${coverArt.attributes.fileName}.256.jpg`;
     } catch (error) {
       console.error("Error getting cover image URL:", error);
       return "/placeholder.png";

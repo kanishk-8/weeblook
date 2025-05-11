@@ -65,7 +65,7 @@ const PopularManga = () => {
         <div
           className={`md:w-64 ${
             theme === "dark" ? "bg-zinc-800" : "bg-white"
-          } rounded-lg shadow-lg p-4 h-fit sticky top-24`}
+          } rounded-lg shadow-lg p-4 h-fit md:sticky md:top-24 max-h-[50vh] md:max-h-none overflow-y-auto`}
         >
           <h2 className="text-xl font-bold mb-4">Genres</h2>
           <div className="flex flex-col gap-2">
