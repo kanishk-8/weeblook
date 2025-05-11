@@ -16,18 +16,28 @@ const Navbar = () => {
   const pathname = usePathname();
   const currentUrl = pathname ? pathname.split("/")[1] || "home" : "home";
 
+  // Debounced search function
+  useEffect(() => {
+    const debounceTimeout = setTimeout(async () => {
+      if (searchQuery.trim()) {
+        try {
+          const results = await searchManga(searchQuery);
+          setSearchResults(results);
+          setIsSearchFocused(true);
+        } catch (error) {
+          console.error("Error searching manga:", error);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(debounceTimeout);
+  }, [searchQuery, searchManga]);
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-
-    try {
-      const results = await searchManga(searchQuery);
-      setSearchResults(results);
-      setIsSearchFocused(true);
-      console.log("Search results:", results);
-    } catch (error) {
-      console.error("Error searching manga:", error);
-    }
   };
 
   return (
@@ -59,23 +69,9 @@ const Navbar = () => {
         </Link>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 text-[#d65d0e]"
+          className="h-14 w-14 rounded-full flex items-center justify-center transition-colors bg-[#d65d0e] aspect-square"
         >
-          {/* Hamburger Icon */}
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
+          <Image src="/logo.png" width={50} height={50} alt="Logo" priority />
         </button>
       </div>
       {/* Desktop Navbar */}
