@@ -18,7 +18,7 @@ export const metadata = {
   title: "WeebLook",
   description: "website for weebs",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo.ico",
   },
 };
 
